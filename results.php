@@ -50,24 +50,44 @@
 
               // Envoi des données récupérées via le POST
 
-          $dataToDisplay = $MyDB->prepare("SELECT * FROM t_msg WHERE id_Email = (SELECT id_Email FROM t_email WHERE Email = :email) ORDER BY date_msg DESC");
-          $dataToDisplay->execute([":email" => $person]);
-          $dataToParse = $dataToDisplay->fetchall();
-          //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
-          foreach ($dataToParse as $row) {
-            $sujet = $row['sujet'];
-            $date = $row['date_msg'];
-            $msg = $row['msg'];
-            $format = '<div class="card col-9 px-0 mb-5"><div class="card-header d-flex flex-row justify-content-between"><h6>Sujet: ' . $sujet . '</h6><h6>' . $date . '</h6></div><div class="card-body"><blockquote class="blockquote mb-0"><p>' . $msg . '</p><footer class="blockquote-footer">' . $sujet . '</footer></blockquote></div></div>';
-            printf($format);
+          $messageToDisplay = $MyDB->prepare("SELECT t_msg.sujet, t_msg.date_msg, t_msg.msg, t_msg.etat, t_personne.prenom, t_personne.nom FROM t_msg INNER JOIN t_personne ON t_msg.id_Email = t_personne.id_Email WHERE t_msg.id_Email = (SELECT id_Email FROM t_email WHERE Email = :email) GROUP BY t_msg.id_msg ORDER BY date_msg DESC");
+          if (! ($MyDB->inTransaction())) {
+            try {
+              $MyDB->beginTransaction();
+              $messageToDisplay->execute([":email" => $person]);
+              $dataToParse = $messageToDisplay->fetchall();
+              $MyDB->commit();
+             //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
+              foreach ($dataToParse as $row) {
+              $sujet = $row['sujet'];
+              $date = $row['date_msg'];
+              $msg = $row['msg'];
+              $etat = $row['etat'];
+              $name = $row['prenom'] . " " . $row['nom'];
+              $format = '<div class="card col-9 px-0 mb-5"><div class="card-header d-flex flex-row justify-content-between"><h6>Sujet: ' . $sujet . '</h6><h6>' . $date . '</h6></div><div class="card-body"><blockquote class="blockquote mb-0"><p>' . $msg . '</p><footer class="blockquote-footer">' . $name . '</footer></blockquote></div></div>';
+              /*  FORMULAIRE A RAJOUTER
+              <form><div class="form-group"><label for="exampleFormControlSelect1">Etat du message</label><select class="form-control" id="exampleFormControlSelect1"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div><button type="submit" class="btn btn-primary mb-2">Confirm identity</button></form>
+              */
+              printf($format);
+              }
+            }
+            catch(Exception $ExceptionRaised){
+              printf($ExceptionRaised->getMessage());
+              $MyDB->rollBack();
+            }
           }
+          
         }
       }
     }
     else {
       Printf("Merci de saisir un correspondant");
     }
+
+
     ?>
   </div>
 </body>
 </html>
+
+
