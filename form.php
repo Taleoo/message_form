@@ -72,6 +72,8 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                         $MySendmessage->execute($ReqParamMsg);
                         $MySendperson->execute($ReqParamPerson);
                         $MyDB->commit();
+                        printf("Message envoyé");
+                        header('refresh:3; url=index.html');
                       }
                       catch (Exception $ExceptionRaised) {
                         printf($ExceptionRaised->getMessage());

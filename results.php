@@ -41,18 +41,31 @@
   <div class="container-fluid mt-5" id="resultcontainer">
 
     <?php
-    // Envoi des données récupérées via le POST
+    //Vérification et échappement des données
+    if (!empty($_POST["correspondant"])){
       $person = $_POST['correspondant'];
-      $dataToDisplay = $MyDB->prepare("SELECT * FROM t_msg WHERE id_Email = (SELECT id_Email FROM t_email WHERE Email = :email) ORDER BY date_msg DESC");
-      $dataToDisplay->execute([":email" => $person]);
-      $dataToParse = $dataToDisplay->fetchall();
-      //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
-      foreach ($dataToParse as $row) {
-        $sujet = $row['sujet'];
-        $date = $row['date_msg'];
-        $msg = $row['msg'];
-        $format = '<div class="card col-9 px-0 mb-5"><div class="card-header d-flex flex-row justify-content-between"><h6>Sujet: ' . $sujet . '</h6><h6>' . $date . '</h6></div><div class="card-body"><blockquote class="blockquote mb-0"><p>' . $msg . '</p><footer class="blockquote-footer">' . $sujet . '</footer></blockquote></div></div>';
-        printf($format);
+      if (filter_var($person, FILTER_VALIDATE_EMAIL)) {
+        if (filter_var($person, FILTER_SANITIZE_EMAIL)) {
+          $person = filter_var($person, FILTER_SANITIZE_EMAIL);
+
+              // Envoi des données récupérées via le POST
+
+          $dataToDisplay = $MyDB->prepare("SELECT * FROM t_msg WHERE id_Email = (SELECT id_Email FROM t_email WHERE Email = :email) ORDER BY date_msg DESC");
+          $dataToDisplay->execute([":email" => $person]);
+          $dataToParse = $dataToDisplay->fetchall();
+          //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
+          foreach ($dataToParse as $row) {
+            $sujet = $row['sujet'];
+            $date = $row['date_msg'];
+            $msg = $row['msg'];
+            $format = '<div class="card col-9 px-0 mb-5"><div class="card-header d-flex flex-row justify-content-between"><h6>Sujet: ' . $sujet . '</h6><h6>' . $date . '</h6></div><div class="card-body"><blockquote class="blockquote mb-0"><p>' . $msg . '</p><footer class="blockquote-footer">' . $sujet . '</footer></blockquote></div></div>';
+            printf($format);
+          }
+        }
+      }
+    }
+    else {
+      Printf("Merci de saisir un correspondant");
     }
     ?>
   </div>
