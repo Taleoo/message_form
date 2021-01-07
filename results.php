@@ -16,9 +16,14 @@
     crossorigin="anonymous"></script>
   <link rel="stylesheet" href="src/style.css">
   <title>Messages results</title>
+  <!-- Page pour afficher les résultats de la requête SQL d'affichage des messages par correspondant -->
 </head>
 <body>
+
 <?php
+/*Test de la connexion à la BDD et die si erreur
+  SetAttribute pour récupérer les exceptions PDO à enlever en prod
+*/
       try {      
         $MyDB = new PDO("mysql:host=labo-ve.fr;dbname=laboadm_mgoudj","laboadm_mehd_goud","fKh^gzx[8]EP", array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
       } catch (Exception $ExceptionRaised) {
@@ -26,6 +31,8 @@
       }
       $MyDB->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
       ?>  
+
+      <!-- Formulaire d'envoi de l'email du correspondant -->
       <form class="col-12 pt-3 d-flex flex-column justify-content-center align-content-center align-items-center" action="results.php" method="post">
       <label class="col-12 text-center" for="correspondant">Recherchez les messages d'un correspondant</label>
       <input class="col-3 text-center" type="email" maxlength="50" class="form-control" id="correspondant" placeholder="Entrez l'email du correspondant" name="correspondant">
@@ -34,12 +41,13 @@
   <div class="container-fluid mt-5" id="resultcontainer">
 
     <?php
+    // Envoi des données récupérées via le POST
       $person = $_POST['correspondant'];
       $dataToDisplay = $MyDB->prepare("SELECT * FROM t_msg WHERE id_Email = (SELECT id_Email FROM t_email WHERE Email = :email) ORDER BY date_msg DESC");
       $dataToDisplay->execute([":email" => $person]);
       $dataToParse = $dataToDisplay->fetchall();
+      //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
       foreach ($dataToParse as $row) {
-        //print '<div class="borderResult"><p>Sujet: ' . $row['sujet'] . ' Date:' . $row['date_msg'] . '</p><p>Message: ' . $row['msg'] . '</p></div>';
         $sujet = $row['sujet'];
         $date = $row['date_msg'];
         $msg = $row['msg'];
