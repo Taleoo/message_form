@@ -48,10 +48,20 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                       die($ExceptionRaised);
                   }
                   $MyDB->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                  $MailExists = false;
+                  $MyCheckMail = $MyDB->prepare(CHECK_MAIL);
                   $MySendmessage = $MyDB->prepare(SEND_MSG);
                   $MyEmailID = $MyDB->prepare(EMAIL_ID);
                   $MySendmail = $MyDB->prepare(SEND_MAIL);
-                  $MySendperson = $MyDB->prepare(SEND_PRSN);  
+                  $MySendperson = $MyDB->prepare(SEND_PRSN);
+                  $MyCheckMail->execute();
+                  $Results = $MyCheckMail->fetch(PDO::FETCH_ASSOC);
+                  foreach ($Results as $checked) {
+                    if ($checked == $email){
+                      $MailExists = true;
+                    }
+                  }
+                  
                     if (! ($MyDB->inTransaction())) {
                       try {
                         $MyDB->beginTransaction();
@@ -67,13 +77,23 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                           ":message" => $petitMot,
                           ":sujet" => $sujet
                         ];
-                        $MySendmail->execute($ReqParamMail);
+                        if (!$MailExists){
                         $MyEmailID->execute($ReqParamMail);
                         $MySendmessage->execute($ReqParamMsg);
                         $MySendperson->execute($ReqParamPerson);
                         $MyDB->commit();
                         printf("Message envoyé");
                         header('refresh:3; url=index.html');
+                        }
+                        else{
+                          $MySendmail->execute($ReqParamMail);
+                          $MyEmailID->execute($ReqParamMail);
+                          $MySendmessage->execute($ReqParamMsg);
+                          $MySendperson->execute($ReqParamPerson);
+                          $MyDB->commit();
+                          printf("Message envoyé");
+                          header('refresh:3; url=index.html');
+                        }
                       }
                       catch (Exception $ExceptionRaised) {
                         printf($ExceptionRaised->getMessage());
