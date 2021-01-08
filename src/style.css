@@ -67,5 +67,10 @@ html {
   height: 10vh;
   border: 1px solid red;
 }
-
+.messageP{
+width: 40%;
+}
+.stateP{
+width: 40%;
+}
 /* END Style for the result page */
