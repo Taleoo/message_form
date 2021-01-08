@@ -49,6 +49,18 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                   }
                   $MyDB->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                   $MailExists = false;
+                  $ReqParamMail = [
+                    ":email" => $email
+                  ];
+                  $ReqParamPerson = [
+                    ":prenom" => $prenom,
+                    ":nom" => $nom,
+                    ":tel" => $telephone
+                  ];
+                  $ReqParamMsg = [
+                    ":message" => $petitMot,
+                    ":sujet" => $sujet
+                  ];
                   $MyCheckMail = $MyDB->prepare(CHECK_MAIL);
                   $MySendmessage = $MyDB->prepare(SEND_MSG);
                   $MyEmailID = $MyDB->prepare(EMAIL_ID);
@@ -65,27 +77,16 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                     if (! ($MyDB->inTransaction())) {
                       try {
                         $MyDB->beginTransaction();
-                        $ReqParamMail = [
-                          ":email" => $email
-                        ];
-                        $ReqParamPerson = [
-                          ":prenom" => $prenom,
-                          ":nom" => $nom,
-                          ":tel" => $telephone
-                        ];
-                        $ReqParamMsg = [
-                          ":message" => $petitMot,
-                          ":sujet" => $sujet
-                        ];
-                        if (!$MailExists){
-                        $MyEmailID->execute($ReqParamMail);
-                        $MySendmessage->execute($ReqParamMsg);
-                        $MySendperson->execute($ReqParamPerson);
-                        $MyDB->commit();
-                        printf("Message envoyé");
-                        header('refresh:3; url=index.html');
+                        if ($MailExists){
+                          $MyEmailID->execute($ReqParamMail);
+                          $MySendmessage->execute($ReqParamMsg);
+                          $MySendperson->execute($ReqParamPerson);
+                          $MyDB->commit();
+                          printf("Message envoyé");
+                          header('refresh:3; url=index.html');
                         }
                         else{
+                          
                           $MySendmail->execute($ReqParamMail);
                           $MyEmailID->execute($ReqParamMail);
                           $MySendmessage->execute($ReqParamMsg);
