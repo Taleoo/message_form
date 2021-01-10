@@ -35,44 +35,46 @@
 <!-- Formulaire d'envoi de l'email du correspondant -->
   <form class="col-12 pt-3 d-flex flex-column justify-content-center align-content-center align-items-center" action="results.php" method="post">
     <label class="col-12 text-center" for="correspondant">Recherchez les messages d'un correspondant</label>
-    <input class="col-3 text-center" type="email" maxlength="50" class="form-control" id="correspondant" placeholder="Entrez l'email du correspondant" name="correspondant">
+    <input class="col-6 col-md-3 text-center" type="email" maxlength="50" class="form-control" id="correspondant" placeholder="Entrez l'email" name="correspondant">
     <button type="submit" class="btn mt-2" id="submitButton">Rechercher</button>
   </form>
   <div class="container-fluid mt-5" id="resultcontainer">
 
 
 <?php
-
+  $arrayID = array();
 // Declaration de la fonction de récupération des données
-
 function getData($DB, $request, $requestVar = NULL){
+  global $arrayID;
   if (! ($DB->inTransaction())) {
     try {
       $DB->beginTransaction();
       $request->execute($requestVar);
       $dataToParse = $request->fetchall();
       $DB->commit();
-     //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
-      foreach ($dataToParse as $row) {
-      $sujet = $row['sujet'];
-      $date = $row['date_msg'];
-      $msg = $row['msg'];
-      $idmsg =$row['id_msg'];
-      $etat = $row['etat'];
-      $name = $row['prenom'] . " " . $row['nom'];
+      $arrayID = array();
+      //Parse de tous les champs de l'objet retourné pour les afficher ensuite dans un printf
+      for ($i = 0; $i < count($dataToParse); $i++) {
+      $sujet = $dataToParse[$i]['sujet'];
+      $date =  $dataToParse[$i]['date_msg'];
+      $msg =  $dataToParse[$i]['msg'];
+      $idmsg = $dataToParse[$i]['id_msg'];
+      $etat =  $dataToParse[$i]['etat'];
+      $name =  $dataToParse[$i]['prenom'] . " " .  $dataToParse[$i]['nom'];
+      array_push($arrayID, $idmsg);
       $format = '<div class="card col-9 px-0 mb-5">
                     <div class="card-header d-flex flex-row justify-content-between">
                       <h6>Sujet: ' . $sujet . '</h6>
                       <h6>' . $date . '</h6>
                     </div>
-                    <div class="card-body d-flex flex-row justify-content-around">
-                      <blockquote class="blockquote mb-0 col-9 d-flex flex-column justify-content-around">
+                    <div class="card-body d-flex flex-column flex-md-row justify-content-around">
+                      <blockquote class="blockquote mb-0 col-12 col-md-9 d-flex flex-column justify-content-around">
                         <p class="messageP">' . $msg . '</p>             
                         <footer class="blockquote-footer">' . $name . '</footer>
                       </blockquote>
-                      <form class="stateP col-3 d-flex flex-column justify-content-center align-content-center align-items-center">
+                      <form class="stateP col-12 col-md-3 d-flex flex-column justify-content-center align-content-center align-items-center">
                         <div class="form-group">
-                          <label for="state" class="col-12 text-center">Etat actuel : ' . $etat . '</label>
+                          <label for="state" class="col-12 text-center">Etat actuel : ' .  $etat  . '</label>
                           <select class="form-control col-9 mx-auto text-left status" id="state" name="state">
                             <option>À traiter</option>
                             <option>À relancer</option>
@@ -81,7 +83,7 @@ function getData($DB, $request, $requestVar = NULL){
                             <option>Sans suite</option>
                           </select>
                         </div>
-                        <button type="button" value="'. $idmsg . '"class="btn btn-primary mb-2 col-9 submitState">Modifier Etat</button>
+                        <button type="button" value="'. $i . '"class="btn btn-primary mb-2 submitState">Modifier Etat</button>
                       </form>
                     </div>
                   </div>';
@@ -120,13 +122,13 @@ $messageToDisplay = $MyDB->prepare("SELECT t_msg.sujet, t_msg.id_msg, t_msg.date
   }
   else {
     getData($MyDB, $default);
-    Printf("Merci de saisir un correspondant");
+    
   }
   //Changement de l'etat du mail
-  
   if (!empty($_POST["state"]) && !empty($_POST["id"])){
+    global $arrayID;
     $state = $_POST["state"];
-    $id = $_POST["id"];
+    $id = intval($arrayID[$_POST["id"]]);
     if (filter_var($state, FILTER_VALIDATE_REGEXP, array(
           "options" => array("regexp"=>"/^(À traiter)$|^(À relancer)$|^(Attente de réponse)$|^(RDV pris)$|^(Sans suite)$/")
         ))){

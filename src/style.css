@@ -68,9 +68,26 @@ html {
   border: 1px solid red;
 }
 .messageP{
-width: 40%;
+display: block;
+width: 70%;
+max-height: 50vh;
+overflow-y: auto;
 }
-.stateP{
-width: 40%;
+form{
+  background-color: unset!important;
+}
+#correspondant{
+  background: unset!important;
+  padding: unset!important;
+  border-top-left-radius: unset!important;
+  border-bottom-left-radius: unset!important;
+}
+@media (max-width:768px){
+  blockquote{
+    width: 95%;
+  }
+  .messageP{
+    width: 100%;
+  }
 }
 /* END Style for the result page */

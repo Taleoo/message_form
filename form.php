@@ -67,13 +67,12 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                   $MySendmail = $MyDB->prepare(SEND_MAIL);
                   $MySendperson = $MyDB->prepare(SEND_PRSN);
                   $MyCheckMail->execute();
-                  $Results = $MyCheckMail->fetch(PDO::FETCH_ASSOC);
+                  $Results = $MyCheckMail->fetchall(PDO::FETCH_COLUMN);
                   foreach ($Results as $checked) {
                     if ($checked == $email){
                       $MailExists = true;
                     }
                   }
-                  
                     if (! ($MyDB->inTransaction())) {
                       try {
                         $MyDB->beginTransaction();
@@ -86,7 +85,6 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                           header('refresh:3; url=index.html');
                         }
                         else{
-                          
                           $MySendmail->execute($ReqParamMail);
                           $MyEmailID->execute($ReqParamMail);
                           $MySendmessage->execute($ReqParamMsg);
