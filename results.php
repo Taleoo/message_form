@@ -108,47 +108,53 @@ function getData($DB, $request, $requestVar = NULL){
 
 $default = $MyDB->prepare("SELECT t_msg.sujet, t_msg.id_msg, t_msg.date_msg, t_msg.msg, t_msg.etat, t_personne.prenom, t_personne.nom FROM t_msg INNER JOIN t_personne ON t_msg.id_Email = t_personne.id_Email GROUP BY t_msg.id_msg ORDER BY date_msg DESC");
 $messageToDisplay = $MyDB->prepare("SELECT t_msg.sujet, t_msg.id_msg, t_msg.date_msg, t_msg.msg, t_msg.etat, t_personne.prenom, t_personne.nom FROM t_msg INNER JOIN t_personne ON t_msg.id_Email = t_personne.id_Email WHERE t_msg.id_Email = (SELECT id_Email FROM t_email WHERE t_email.Email = :email) GROUP BY t_msg.id_msg ORDER BY date_msg DESC");
-
-
+$tempStock = $MyDB->prepare("INSERT INTO t_stock (temp_email) VALUES (:email)");
+$getPerson = $MyDB->prepare("SELECT temp_email FROM t_stock");
 
 
 
 //Validation des données du formulaire et affichage des résultats
-  if (!empty($_POST["correspondant"])){
-    $person = $_POST['correspondant'];
-    if (filter_var($person, FILTER_VALIDATE_EMAIL)) {
-      if (filter_var($person, FILTER_SANITIZE_EMAIL)) {
-        $person = filter_var($person, FILTER_SANITIZE_EMAIL);
-            // Envoi des données récupérées via le POST
+if (!empty($_POST["correspondant"])){
+  $person = $_POST['correspondant'];
+  if (filter_var($person, FILTER_VALIDATE_EMAIL)) {
+    if (filter_var($person, FILTER_SANITIZE_EMAIL)) {
+      $person = filter_var($person, FILTER_SANITIZE_EMAIL);
+          // Envoi des données récupérées via le POST
 
-        getData($MyDB, $messageToDisplay, [":email" => $person]);
-        
+      getData($MyDB, $messageToDisplay, [":email" => $person]);
+      $MyDB->beginTransaction();
+      $tempStock->execute([":email" => $person]);
+      $MyDB->commit();
+    }
+  }
+}
+else {
+  getData($MyDB, $default);
+}
+
+//Changement de l'etat du mail
+if (!empty($_POST["state"]) && !empty($_POST["id"])){
+  $state = $_POST["state"];
+  $id = intval($dataToParse[$_POST["id"]]["id_msg"]);
+  // GET PERSON FROM DB
+  $getPerson->execute();
+  $lala = $getPerson->fetch(PDO::FETCH_ASSOC);
+  $person = $lala["temp_email"];
+  getData($MyDB, $messageToDisplay, [":email" => $person]);
+  if (filter_var($state, FILTER_VALIDATE_REGEXP, array(
+        "options" => array("regexp"=>"/^(À traiter)$|^(À relancer)$|^(Attente de réponse)$|^(RDV pris)$|^(Sans suite)$/")
+      ))){
+          $state = filter_var($state, FILTER_SANITIZE_STRING);
+          $id = filter_var($id, FILTER_SANITIZE_NUMBER_INT);
+          $updateState = $MyDB->prepare("UPDATE t_msg SET etat = :state WHERE id_msg = :id");
+          $MyDB->beginTransaction();
+          $updateState->execute([":state" => $state, ":id" => $dataToParse[$_POST["id"]]["id_msg"]]);
+          $MyDB->prepare("DELETE FROM t_stock WHERE temp_email = :person")->execute([":person" => $person]);
+          $MyDB->commit();
       }
-    }
+  
+  
   }
-  else {
-    getData($MyDB, $default);
-    
-  }
-
-
-  //Changement de l'etat du mail
-  if (!empty($_POST["state"]) && !empty($_POST["id"])){
-    $state = $_POST["state"];
-    $id = intval($dataToParse[$_POST["id"]]["id_msg"]);
-    if (filter_var($state, FILTER_VALIDATE_REGEXP, array(
-          "options" => array("regexp"=>"/^(À traiter)$|^(À relancer)$|^(Attente de réponse)$|^(RDV pris)$|^(Sans suite)$/")
-        ))){
-            $state = filter_var($state, FILTER_SANITIZE_STRING);
-            $id = filter_var($id, FILTER_SANITIZE_NUMBER_INT);
-            $updateState = $MyDB->prepare("UPDATE t_msg SET etat = :state WHERE id_msg = :id");
-            $MyDB->beginTransaction();
-            $updateState->execute([":state" => $state, ":id" => $dataToParse[$_POST["id"]]["id_msg"]]);
-            $MyDB->commit();
-        }
-    
-    
-    }
 ?>
 
 
