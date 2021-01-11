@@ -9,7 +9,7 @@ $( document ).ready(function() {
             state: $(e.currentTarget).siblings("div").children(".status").val(),
             id: $(e.currentTarget).val()
         },
-        success: function(data) {
+        success: function() {
           alert("Etat changé");
         },  
         error: function(){
