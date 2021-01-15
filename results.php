@@ -140,7 +140,12 @@ if (!empty($_POST["state"]) && !empty($_POST["id"])){
   $getPerson->execute();
   $lala = $getPerson->fetch(PDO::FETCH_ASSOC);
   $person = $lala["temp_email"];
-  getData($MyDB, $messageToDisplay, [":email" => $person]);
+  if ($person){
+    getData($MyDB, $messageToDisplay, [":email" => $person]);
+  }
+    else {
+      getData($MyDB, $default);
+    }
   if (filter_var($state, FILTER_VALIDATE_REGEXP, array(
         "options" => array("regexp"=>"/^(À traiter)$|^(À relancer)$|^(Attente de réponse)$|^(RDV pris)$|^(Sans suite)$/")
       ))){
