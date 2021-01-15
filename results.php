@@ -156,7 +156,6 @@ if (!empty($_POST["state"]) && !empty($_POST["id"])){
           $updateState->execute([":state" => $state, ":id" => $dataToParse[$_POST["id"]]["id_msg"]]);
           $MyDB->prepare("DELETE FROM t_stock WHERE temp_email = :person")->execute([":person" => $person]);
           $MyDB->commit();
-          header("refresh:1");
       }
   
   

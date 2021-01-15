@@ -10,7 +10,9 @@ $( document ).ready(function() {
             id: $(e.currentTarget).val()
         },
         success: function() {
-          alert("Etat changé");
+          confirm("Etat changé");
+          location.reload();
+          
         },  
         error: function(){
           alert('Erreur');
