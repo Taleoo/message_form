@@ -79,7 +79,6 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                         if ($MailExists){
                           $MyEmailID->execute($ReqParamMail);
                           $MySendmessage->execute($ReqParamMsg);
-                          $MySendperson->execute($ReqParamPerson);
                           $MyDB->commit();
                           printf("Message envoyé");
                           header('refresh:3; url=index.html');

@@ -11,8 +11,7 @@ $( document ).ready(function() {
         },
         success: function() {
           confirm("Etat changé");
-          location.reload();
-          
+          location.reload();          
         },  
         error: function(){
           alert('Erreur');
