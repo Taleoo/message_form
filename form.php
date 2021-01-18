@@ -49,6 +49,7 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                   }
                   $MyDB->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                   $MailExists = false;
+                  //Prepare every SQL request
                   $ReqParamMail = [
                     ":email" => $email
                   ];
@@ -66,23 +67,43 @@ if (isset($_POST["email"]) && isset($_POST["message"]) && isset($_POST["sujet"])
                   $MyEmailID = $MyDB->prepare(EMAIL_ID);
                   $MySendmail = $MyDB->prepare(SEND_MAIL);
                   $MySendperson = $MyDB->prepare(SEND_PRSN);
+                  $MyCheckPhone = $MyDB->prepare(CHECK_PHONE);
                   $MyCheckMail->execute();
+                  $MyCheckPhone->execute([":email" => $email]);
                   $Results = $MyCheckMail->fetchall(PDO::FETCH_COLUMN);
+                  $ResultsPhone = $MyCheckPhone->fetchall(PDO::FETCH_COLUMN);
+                  //Fetch email and Phone to see if they exist, if they do set variables to true
                   foreach ($Results as $checked) {
                     if ($checked == $email){
                       $MailExists = true;
                     }
                   }
+                  foreach ($ResultsPhone as $checked) {
+                    if ($checked == $telephone){
+                      $PhoneCheck = true;
+                    }
+                  }
                     if (! ($MyDB->inTransaction())) {
                       try {
                         $MyDB->beginTransaction();
-                        if ($MailExists){
-                          $MyEmailID->execute($ReqParamMail);
-                          $MySendmessage->execute($ReqParamMsg);
+                        // Check if mail exists in DB and if so go to second check
+                        if ($MailExists){  
+                          //If phone number is already inside DB for the email sent, change it.
+                          if ($PhoneCheck){
+                            $MyEmailID->execute($ReqParamMail);
+                            $MySendmessage->execute($ReqParamMsg);
+                            $MyDB->prepare(SEND_PHONE)->execute([":tel" => $telephone,":email" => $email]);
+                          }
+                          //Else, don't change the phone number
+                          else{
+                            $MyEmailID->execute($ReqParamMail);
+                            $MySendmessage->execute($ReqParamMsg);
+                          }
                           $MyDB->commit();
                           printf("Message envoyé");
                           header('refresh:3; url=index.html');
                         }
+                        //if the mail is not in DB, add everything
                         else{
                           $MySendmail->execute($ReqParamMail);
                           $MyEmailID->execute($ReqParamMail);
